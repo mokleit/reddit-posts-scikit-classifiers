@@ -27,37 +27,56 @@ train_labels = pd.read_csv('resources/train_labels.csv', names=['label'], header
 train_examples = pd.read_csv('resources/train_examples.csv', names=['example'], engine='python', header=None, delimiter='\t\n')
 test_examples = pd.read_csv('resources/test_examples.csv', names=['example'], engine='python', header=None, delimiter='\t\n')
 
-print("WORDS BEFORE CLEANING:", train_examples['example'].apply(lambda x: len(x.split(' '))).sum())
-
-
-def clean_text(text):
-    text = BeautifulSoup(text, "html.parser").text
-    text = text.lower()
-    text = REPLACE_BY_SPACE_RE.sub(' ', text)
-    text = BAD_SYMBOLS_RE.sub('', text)
-    text = ' '.join(word for word in text.split() if word not in STOPWORDS)
-    return text
-
-
-start_cleaning = time.process_time()
-print("CLEANING TRAINING...")
-train_examples['example'] = train_examples['example'].apply(clean_text)
-end_cleaning = time.process_time()
-print("TOOK", end_cleaning-start_cleaning, 'SECONDS')
-
-print("WORDS AFTER CLEANING TRAINING DATA:", train_examples['example'].apply(lambda x: len(x.split(' '))).sum())
-np.savetxt("resources/clean_train_examples.csv", train_examples, fmt="%s", delimiter='\t\n')
+# print("WORDS BEFORE CLEANING:", train_examples['example'].apply(lambda x: len(x.split(' '))).sum())
+#
+#
+# def clean_text(text):
+#     text = BeautifulSoup(text, "html.parser").text
+#     text = text.lower()
+#     text = REPLACE_BY_SPACE_RE.sub(' ', text)
+#     text = BAD_SYMBOLS_RE.sub('', text)
+#     text = ' '.join(word for word in text.split() if word not in STOPWORDS)
+#     return text
+#
+#
+# start_cleaning = time.process_time()
+# print("CLEANING TRAINING...")
+# train_examples['example'] = train_examples['example'].apply(clean_text)
+# end_cleaning = time.process_time()
+# print("TOOK", end_cleaning-start_cleaning, 'SECONDS')
+#
+# print("WORDS AFTER CLEANING TRAINING DATA:", train_examples['example'].apply(lambda x: len(x.split(' '))).sum())
+# np.savetxt("resources/clean_train_examples.csv", train_examples, fmt="%s", delimiter='\t\n')
 
 X = train_examples.example
 y = train_labels.label
 labels = np.unique(train_labels.label)
 
+#######################################################################################################################################################
+#--------------------GRIDSEARCH------------------------------------
+# pipeline = Pipeline([('vectorizer', CountVectorizer()),
+#                      ('tfidf', TfidfTransformer()),
+#                      ('classifier', AdaBoostClassifier(DecisionTreeClassifier(max_depth=1), n_estimators=1000)())
+#                      ])
+# param_grid = {'classifier__n_estimators': [500, 1000, 1500, 2000]}
+# print("PARAM SEARCH...")
+# start_search = time.process_time()
+# search = GridSearchCV(pipeline, param_grid=param_grid, iid=True, cv=5,  n_jobs=-1,refit=True)
+# search.fit(X, y)
+# end_search = time.process_time()
+# print("TOOK", end_search-start_search, 'SECONDS')
+#
+# print("\nBEST SCORE", search.best_score_)
+# print("BEST PARAMETER", search.best_params_)
+
+#######################################################################################################################################################
+
 print("SPLITTING...")
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.01, random_state=42)
 
 pipeline = Pipeline([('vectorizer', CountVectorizer()),
                      ('tfidf', TfidfTransformer()),
-                     ('classifier', AdaBoostClassifier(DecisionTreeClassifier(max_depth=1), n_estimators=1000))
+                     ('classifier', AdaBoostClassifier(ComplementNB(alpha=1.2400000000000002), n_estimators=500))
                      ])
 
 print("TRAINING...")
@@ -75,7 +94,7 @@ print("TOOK", end_test_predicting- start_test_predicting, 'SECONDS')
 print('ACCURACY %s' % accuracy_score(test_predictions, y_test))
 report = classification_report(y_test, test_predictions, target_names=labels, output_dict=True)
 print(classification_report(y_test, test_predictions, target_names=labels))
-classification_report = pd.DataFrame(report).transpose()
-classification_report.to_csv('adaboost_classification_report.csv')
+# classification_report = pd.DataFrame(report).transpose()
+# classification_report.to_csv('adaboost_classification_report.csv')
 
 

@@ -23,26 +23,34 @@ train_labels = pd.read_csv('resources/train_labels.csv', names=['label'], header
 train_examples = pd.read_csv('resources/train_examples.csv', names=['example'], engine='python', header=None, delimiter='\t\n')
 test_examples = pd.read_csv('resources/test_examples.csv', names=['example'], engine='python', header=None, delimiter='\t\n')
 
-print("WORDS BEFORE CLEANING:", train_examples['example'].apply(lambda x: len(x.split(' '))).sum())
+# train = np.array(train_examples.example)
+# test = np.array(test_examples.example)
+# print('GETTING INDEXES OF COMMON ELEMENTS...')
+# start_common = time.process_time()
+# test_index = np.where(np.in1d(test, train))[0]
+# end_common = time.process_time()
+# print('TOOK', end_common-start_common, 'seconds')
 
-
-def clean_text(text):
-    text = BeautifulSoup(text, "html.parser").text
-    text = text.lower()
-    text = REPLACE_BY_SPACE_RE.sub(' ', text)
-    text = BAD_SYMBOLS_RE.sub('', text)
-    text = ' '.join(word for word in text.split() if word not in STOPWORDS)
-    return text
-
-
-start_cleaning = time.process_time()
-print("CLEANING...")
-train_examples['example'] = train_examples['example'].apply(clean_text)
-end_cleaning = time.process_time()
-print("TOOK", end_cleaning-start_cleaning, 'SECONDS')
-
-print("WORDS AFTER CLEANING:", train_examples['example'].apply(lambda x: len(x.split(' '))).sum())
-np.savetxt("resources/clean_train_examples.csv", train_examples, fmt="%s", delimiter='\t\n')
+# print("WORDS BEFORE CLEANING:", train_examples['example'].apply(lambda x: len(x.split(' '))).sum())
+#
+#
+# def clean_text(text):
+#     text = BeautifulSoup(text, "html.parser").text
+#     text = text.lower()
+#     text = REPLACE_BY_SPACE_RE.sub(' ', text)
+#     text = BAD_SYMBOLS_RE.sub('', text)
+#     text = ' '.join(word for word in text.split() if word not in STOPWORDS)
+#     return text
+#
+#
+# start_cleaning = time.process_time()
+# print("CLEANING...")
+# train_examples['example'] = train_examples['example'].apply(clean_text)
+# end_cleaning = time.process_time()
+# print("TOOK", end_cleaning-start_cleaning, 'SECONDS')
+#
+# print("WORDS AFTER CLEANING:", train_examples['example'].apply(lambda x: len(x.split(' '))).sum())
+# np.savetxt("resources/clean_train_examples.csv", train_examples, fmt="%s", delimiter='\t\n')
 
 X = train_examples.example
 y = train_labels.label
@@ -51,49 +59,46 @@ labels = np.unique(train_labels.label)
 
 #######################################################################################################################################################
 #--------------------GRIDSEARCH------------------------------------
-pipeline = Pipeline([('vectorizer', CountVectorizer()),
-                     ('tfidf', TfidfTransformer()),
-                     # ('classifier', SGDClassifier(loss='hinge', penalty='l2', alpha=0.0001, random_state=42, max_iter=5, tol=None))
-                     ('classifier', SVC())
-                     ])
-param_grid = {'classifier__C': [1, 10, 100, 1000]}
-print("PARAM SEARCH...")
-start_search = time.process_time()
-search = GridSearchCV(pipeline, param_grid=param_grid, iid=True, cv=5,  n_jobs=-1,refit=True)
-search.fit(X, y)
-end_search = time.process_time()
-print("TOOK", end_search-start_search, 'SECONDS')
-
-print("\nBEST SCORE", search.best_score_)
-print("BEST PARAMETER", search.best_params_)
+# pipeline = Pipeline([('vectorizer', CountVectorizer()),
+#                      ('tfidf', TfidfTransformer()),
+#                      ('classifier', LinearSVC(loss='squared_hinge', class_weight='balanced', max_iter=10000))
+#                      ])
+# param_grid = {'classifier__C': np.arange(0.1,10,0.5)}
+# print("PARAM SEARCH...")
+# start_search = time.process_time()
+# search = GridSearchCV(pipeline, param_grid=param_grid, iid=True, cv=5,  n_jobs=-1,refit=True)
+# search.fit(X, y)
+# end_search = time.process_time()
+# print("TOOK", end_search-start_search, 'SECONDS')
+#
+# print("\nBEST SCORE", search.best_score_)
+# print("BEST PARAMETER", search.best_params_)
 
 #######################################################################################################################################################
 #--------------------TRAIN/VALIDATION------------------------------------
-#alpha = 0.96
-# pipeline = Pipeline([('vectorizer', CountVectorizer()),
-#                      ('tfidf', TfidfTransformer()),
-#                      # ('classifier', SGDClassifier(loss='hinge', penalty='l2', alpha=0.0001, random_state=42, max_iter=5, tol=None))
-#                      ('classifier', SVC())
-#                      ])
+pipeline = Pipeline([('vectorizer', CountVectorizer()),
+                     ('tfidf', TfidfTransformer()),
+                     ('classifier', LinearSVC(C=0.2, loss='squared_hinge', class_weight='balanced')),
+                     ])
 
-# print("SPLITTING...")
-# X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=42)
-#
-# print("TRAINING...")
-# start_training = time.process_time()
-# pipeline.fit(X_train, y_train)
-# end_training = time.process_time()
-# print("TOOK", end_training-start_training, 'SECONDS')
-#
-# print("PREDICTING VAL...")
-# start_val_predicting = time.process_time()
-# val_predictions = pipeline.predict(X_test)
-# end_val_predicting = time.process_time()
-# print("TOOK", end_val_predicting - start_val_predicting, 'SECONDS')
-#
-# print('ACCURACY %s' % accuracy_score(val_predictions, y_test))
-# report = classification_report(y_test, val_predictions, target_names=labels, output_dict=True)
-# print(classification_report(y_test, val_predictions, target_names=labels))
+print("SPLITTING...")
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.01, random_state=42)
+
+print("TRAINING...")
+start_training = time.process_time()
+pipeline.fit(X_train, y_train)
+end_training = time.process_time()
+print("TOOK", end_training-start_training, 'SECONDS')
+
+print("PREDICTING VAL...")
+start_val_predicting = time.process_time()
+val_predictions = pipeline.predict(X_test)
+end_val_predicting = time.process_time()
+print("TOOK", end_val_predicting - start_val_predicting, 'SECONDS')
+
+print('ACCURACY %s' % accuracy_score(val_predictions, y_test))
+report = classification_report(y_test, val_predictions, target_names=labels, output_dict=True)
+print(classification_report(y_test, val_predictions, target_names=labels))
 # classification_report = pd.DataFrame(report).transpose()
 # classification_report.to_csv('naive_bayes_classification_report.csv')
 
@@ -109,36 +114,48 @@ print("BEST PARAMETER", search.best_params_)
 
 #######################################################################################################################################################
 #--------------------GET PREDICTIONS------------------------------------
-#alpha = 0.96
-#X_test = test_examples.example
-
+# X_test = test_examples.example
+#
 # pipeline = Pipeline([('vectorizer', CountVectorizer()),
 #                      ('tfidf', TfidfTransformer()),
-#                      # ('classifier', SGDClassifier(loss='hinge', penalty='l2', alpha=0.0001, random_state=42, max_iter=5, tol=None))
-#                      ('classifier', SVC())
+#                      ('classifier', LinearSVC(C=0.2, loss='squared_hinge', class_weight='balanced', max_iter=1000)),
 #                      ])
-
-# start_cleaning = time.process_time()
-# print("CLEANING TESTING...")
-# test_examples['example'] = test_examples['example'].apply(clean_text)
-# end_cleaning = time.process_time()
-# print("TOOK", end_cleaning-start_cleaning, 'SECONDS')
 #
-# print("WORDS AFTER CLEANING TESTING DATA:", test_examples['example'].apply(lambda x: len(x.split(' '))).sum())
-# np.savetxt("resources/clean_test_examples.csv", test_examples, fmt="%s", delimiter='\t\n')
-
+# # start_cleaning = time.process_time()
+# # print("CLEANING TESTING...")
+# # test_examples['example'] = test_examples['example'].apply(clean_text)
+# # end_cleaning = time.process_time()
+# # print("TOOK", end_cleaning-start_cleaning, 'SECONDS')
+# #
+# # print("WORDS AFTER CLEANING TESTING DATA:", test_examples['example'].apply(lambda x: len(x.split(' '))).sum())
+# # np.savetxt("resources/clean_test_examples.csv", test_examples, fmt="%s", delimiter='\t\n')
+#
 # print("TRAINING...")
 # start_training = time.process_time()
 # pipeline.fit(X, y)
 # end_training = time.process_time()
 # print("TOOK", end_training-start_training, 'SECONDS')
-
-#print("PREDICTING TEST...")
+#
+# print("PREDICTING TEST...")
 # start_test_predicting = time.process_time()
 # test_predictions = pipeline.predict(X_test)
 # end_test_predicting = time.process_time()
 # print("TOOK", end_test_predicting- start_test_predicting, 'SECONDS')
 #
+# count = 0
+#
+# for (i,x) in enumerate(test_index):
+#     train_index = np.where(np.in1d(train, test[x]))[0][0]
+#     old_label = test_predictions[x]
+#     print('PREDICTION', x, 'was', old_label)
+#     test_predictions[x] = train_labels.label[train_index]
+#     new_label = test_predictions[x]
+#     print('IS NOW', new_label)
+#     if old_label != new_label:
+#         count += 1
+#
+# print('FIXED ', count, 'ERRORS')
+#
 # test_preds = pd.DataFrame(data=test_predictions, columns=['Category'])
 # test_preds.index.name = 'Id'
-# test_preds.to_csv('naive_bayes_test_predictions.csv')
+# test_preds.to_csv('svm_test_predictions.csv')

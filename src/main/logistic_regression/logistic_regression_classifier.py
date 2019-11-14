@@ -140,4 +140,4 @@ print("BEST PARAMETER", search.best_params_)
 #
 # test_preds = pd.DataFrame(data=test_predictions, columns=['Category'])
 # test_preds.index.name = 'Id'
-# test_preds.to_csv('naive_bayes_test_predictions.csv')
+# test_preds.to_csv('old_naive_bayes_test_predictions.csv')
