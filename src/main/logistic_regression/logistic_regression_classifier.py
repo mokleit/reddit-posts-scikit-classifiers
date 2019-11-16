@@ -4,9 +4,9 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.feature_extraction.text import TfidfTransformer, CountVectorizer
 from sklearn.pipeline import Pipeline
 
-train_labels = pd.read_csv('resources/train_labels.csv', names=['label'], header=None)
-train_examples = pd.read_csv('resources/train_examples.csv', names=['example'], engine='python', header=None, delimiter='\t\n')
-test_examples = pd.read_csv('resources/test_examples.csv', names=['example'], engine='python', header=None, delimiter='\t\n')
+train_labels = pd.read_csv('../resources/train_labels.csv', names=['label'], header=None)
+train_examples = pd.read_csv('../resources/train_examples.csv', names=['example'], engine='python', header=None, delimiter='\t\n')
+test_examples = pd.read_csv('../resources/test_examples.csv', names=['example'], engine='python', header=None, delimiter='\t\n')
 
 train = np.array(train_examples.example)
 test = np.array(test_examples.example)

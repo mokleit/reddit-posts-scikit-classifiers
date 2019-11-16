@@ -7,9 +7,9 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 
 
-train_labels = pd.read_csv('resources/train_labels.csv', names=['label'], header=None)
-train_examples = pd.read_csv('resources/train_examples.csv', names=['example'], engine='python', header=None, delimiter='\t\n')
-test_examples = pd.read_csv('resources/test_examples.csv', names=['example'], engine='python', header=None, delimiter='\t\n')
+train_labels = pd.read_csv('../resources/train_labels.csv', names=['label'], header=None)
+train_examples = pd.read_csv('../resources/train_examples.csv', names=['example'], engine='python', header=None, delimiter='\t\n')
+test_examples = pd.read_csv('../resources/test_examples.csv', names=['example'], engine='python', header=None, delimiter='\t\n')
 
 X = train_examples.example
 y = train_labels.label
