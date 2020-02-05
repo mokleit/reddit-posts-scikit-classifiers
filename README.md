@@ -1,5 +1,9 @@
 Mo Kleit
 
+This repository includes different machine learning classifiers implemented using sci-kit functionnalities for text classification in the context of a Kaggle competition.
+
+We train our models on 70000 sub-reddit posts and compute predictions (topic of sub-reddit post: nba, nfl, soccer, anime, etc) for 30,000 test examples. 
+
 --------------HOW TO RUN-----------------
 In order to obtain the predictions, simply run the x_classifier.py script under each classifier module. The predictions will be saved
 in a csv file with the name of the classifier under the main folder.
